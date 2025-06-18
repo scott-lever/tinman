@@ -32,6 +32,93 @@ resource "azurerm_key_vault_access_policy" "current_user" {
   ]
 }
 
+# Azure OpenAI Cognitive Services Account
+resource "azurerm_cognitive_account" "openai" {
+  name                = "tinman-openai"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  kind                = "OpenAI"
+  sku_name            = "S0"  # Standard tier
+
+  custom_subdomain_name = "tinman-openai"
+
+  network_acls {
+    default_action = "Allow"
+  }
+
+  tags = {
+    Environment = "POC"
+    Project     = "Tinman"
+  }
+}
+
+# Azure OpenAI GPT-4.1 Deployment
+resource "azurerm_cognitive_deployment" "gpt41" {
+  name                 = "tinman-gpt41"
+  cognitive_account_id = azurerm_cognitive_account.openai.id
+
+  model {
+    format  = "OpenAI"
+    name    = "gpt-4.1"
+    version = "2025-04-14"
+  }
+
+  scale {
+    type     = "GlobalStandard"
+    capacity = 1
+  }
+
+  rai_policy_name = "Microsoft.Default"
+}
+
+# Azure Storage Account for blob storage
+resource "azurerm_storage_account" "main" {
+  name                     = "tinmanpocstorage"
+  resource_group_name      = azurerm_resource_group.main.name
+  location                 = azurerm_resource_group.main.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  account_kind             = "StorageV2"
+
+  # Enable blob public access for easier development (can be disabled later)
+  allow_nested_items_to_be_public = false
+
+  # Enable versioning for data protection
+  blob_properties {
+    versioning_enabled = true
+  }
+
+  tags = {
+    Environment = "POC"
+    Project     = "Tinman"
+  }
+}
+
+# Blob containers for different purposes
+resource "azurerm_storage_container" "raw_uploads" {
+  name                  = "raw-uploads"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "private"
+}
+
+resource "azurerm_storage_container" "processed" {
+  name                  = "processed"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "private"
+}
+
+resource "azurerm_storage_container" "errors" {
+  name                  = "errors"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "private"
+}
+
+resource "azurerm_storage_container" "archives" {
+  name                  = "archives"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "private"
+}
+
 # Create Key Vault secrets with placeholder values
 resource "azurerm_key_vault_secret" "supabase_url" {
   name         = "supabase-url"
@@ -54,5 +141,40 @@ resource "azurerm_key_vault_secret" "supabase_service_role_key" {
 resource "azurerm_key_vault_secret" "supabase_database_password" {
   name         = "supabase-database-password"
   value        = "PLACEHOLDER_SUPABASE_DATABASE_PASSWORD"
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+# Azure OpenAI API Key (will be stored in Key Vault)
+resource "azurerm_key_vault_secret" "openai_api_key" {
+  name         = "openai-api-key"
+  value        = azurerm_cognitive_account.openai.primary_access_key
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+# Azure OpenAI Endpoint
+resource "azurerm_key_vault_secret" "openai_endpoint" {
+  name         = "openai-endpoint"
+  value        = azurerm_cognitive_account.openai.endpoint
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+# Azure Storage Account Connection String
+resource "azurerm_key_vault_secret" "storage_connection_string" {
+  name         = "storage-connection-string"
+  value        = azurerm_storage_account.main.primary_connection_string
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+# Azure Storage Account Access Key
+resource "azurerm_key_vault_secret" "storage_access_key" {
+  name         = "storage-access-key"
+  value        = azurerm_storage_account.main.primary_access_key
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+# Azure Storage Account Name
+resource "azurerm_key_vault_secret" "storage_account_name" {
+  name         = "storage-account-name"
+  value        = azurerm_storage_account.main.name
   key_vault_id = azurerm_key_vault.main.id
 }
