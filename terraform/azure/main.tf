@@ -32,6 +32,67 @@ resource "azurerm_key_vault_access_policy" "current_user" {
   ]
 }
 
+# Azure AD Service Principal for GitHub Actions
+resource "azuread_application" "github_actions" {
+  display_name = "tinman-github-actions"
+  
+  web {
+    redirect_uris = [
+      "https://token.actions.githubusercontent.com/"
+    ]
+  }
+}
+
+resource "azuread_service_principal" "github_actions" {
+  application_id = azuread_application.github_actions.application_id
+}
+
+resource "azuread_service_principal_password" "github_actions" {
+  service_principal_id = azuread_service_principal.github_actions.id
+}
+
+# Role assignment for the service principal
+resource "azurerm_role_assignment" "github_actions" {
+  scope                = azurerm_resource_group.main.id
+  role_definition_name = "Contributor"
+  principal_id         = azuread_service_principal.github_actions.object_id
+}
+
+# Federated identity credential for GitHub Actions OIDC
+resource "azuread_application_federated_identity_credential" "github_actions" {
+  application_object_id = azuread_application.github_actions.object_id
+  display_name          = "github-actions"
+  description           = "GitHub Actions OIDC"
+  audiences             = ["api://AzureADTokenExchange"]
+  issuer                = "https://token.actions.githubusercontent.com"
+  subject               = "repo:scott-lever/tinman:environment:Production"
+}
+
+# Store GitHub Actions service principal credentials in Key Vault
+resource "azurerm_key_vault_secret" "github_actions_client_id" {
+  name         = "github-actions-client-id"
+  value        = azuread_application.github_actions.application_id
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "github_actions_client_secret" {
+  name         = "github-actions-client-secret"
+  value        = azuread_service_principal_password.github_actions.value
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "github_actions_tenant_id" {
+  name         = "github-actions-tenant-id"
+  value        = data.azurerm_client_config.current.tenant_id
+  key_vault_id = azurerm_key_vault.main.id
+}
+
+resource "azurerm_key_vault_secret" "github_actions_subscription_id" {
+  name         = "github-actions-subscription-id"
+  value        = data.azurerm_client_config.current.subscription_id
+  key_vault_id = azurerm_key_vault.main.id
+}
+
 # Azure OpenAI Cognitive Services Account
 resource "azurerm_cognitive_account" "openai" {
   name                = "tinman-openai"
@@ -177,4 +238,46 @@ resource "azurerm_key_vault_secret" "storage_account_name" {
   name         = "storage-account-name"
   value        = azurerm_storage_account.main.name
   key_vault_id = azurerm_key_vault.main.id
+}
+
+# App Service Plan (Linux)
+resource "azurerm_app_service_plan" "web" {
+  name                = "tinman-appserviceplan"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  kind                = "Linux"
+  reserved            = true
+
+  sku {
+    tier = "Basic"
+    size = "B1"
+  }
+
+  tags = {
+    Environment = "POC"
+    Project     = "Tinman"
+  }
+}
+
+# Web App (Linux)
+resource "azurerm_linux_web_app" "web" {
+  name                = "tinman-webapp"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  service_plan_id     = azurerm_app_service_plan.web.id
+
+  site_config {
+    application_stack {
+      python_version = "3.11"
+    }
+  }
+
+  app_settings = {
+    # Add environment variables here if needed
+  }
+
+  tags = {
+    Environment = "POC"
+    Project     = "Tinman"
+  }
 }
