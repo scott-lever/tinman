@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tinman Data Upload</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .drop-zone {
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            transform: scale(1.02);
+        }
+        .file-item {
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                <i class="fas fa-cloud-upload-alt text-blue-600 mr-3"></i>
+                Tinman Data Upload
+            </h1>
+            <p class="text-gray-600 text-lg">Upload your Excel spreadsheets for processing</p>
+        </div>
+
+        <!-- Upload Zone -->
+        <div class="max-w-2xl mx-auto">
+            <div id="dropZone" class="drop-zone border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-white hover:border-blue-400 cursor-pointer transition-all duration-300">
+                <div class="space-y-4">
+                    <i class="fas fa-file-excel text-4xl text-gray-400"></i>
+                    <div>
+                        <p class="text-lg font-medium text-gray-700">Drop your files here</p>
+                        <p class="text-sm text-gray-500 mt-1">or click to browse</p>
+                    </div>
+                    <p class="text-xs text-gray-400">
+                        Supported formats: .xlsx, .xls, .csv (Max 50MB)
+                    </p>
+                </div>
+                <input type="file" id="fileInput" class="hidden" accept=".xlsx,.xls,.csv" multiple>
+            </div>
+
+            <!-- File List -->
+            <div id="fileList" class="mt-6 space-y-3"></div>
+
+            <!-- Upload Button -->
+            <div class="mt-6 text-center">
+                <button id="uploadBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-upload mr-2"></i>
+                    Upload Files
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessages" class="max-w-2xl mx-auto mt-6 space-y-3"></div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const statusMessages = document.getElementById('statusMessages');
+        
+        let selectedFiles = [];
+
+        // Drag and drop handlers
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            handleFiles(files);
+        });
+
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            const allowedTypes = ['.xlsx', '.xls', '.csv'];
+            const maxSize = 50 * 1024 * 1024; // 50MB
+
+            files.forEach(file => {
+                const extension = '.' + file.name.split('.').pop().toLowerCase();
+                
+                if (!allowedTypes.includes(extension)) {
+                    showStatus(`Invalid file type: ${file.name}`, 'error');
+                    return;
+                }
+
+                if (file.size > maxSize) {
+                    showStatus(`File too large: ${file.name}`, 'error');
+                    return;
+                }
+
+                if (!selectedFiles.find(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                    addFileToList(file);
+                }
+            });
+
+            updateUploadButton();
+        }
+
+        function addFileToList(file) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item bg-white p-4 rounded-lg border border-gray-200 flex items-center justify-between';
+            fileItem.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-file-excel text-green-600"></i>
+                    <div>
+                        <p class="font-medium text-gray-800">${file.name}</p>
+                        <p class="text-sm text-gray-500">${formatFileSize(file.size)}</p>
+                    </div>
+                </div>
+                <button onclick="removeFile('${file.name}')" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            fileList.appendChild(fileItem);
+        }
+
+        function removeFile(fileName) {
+            selectedFiles = selectedFiles.filter(f => f.name !== fileName);
+            updateFileList();
+            updateUploadButton();
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach(file => addFileToList(file));
+        }
+
+        function updateUploadButton() {
+            uploadBtn.disabled = selectedFiles.length === 0;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.createElement('div');
+            const bgColor = type === 'error' ? 'bg-red-100 border-red-400 text-red-700' : 
+                           type === 'success' ? 'bg-green-100 border-green-400 text-green-700' : 
+                           'bg-blue-100 border-blue-400 text-blue-700';
+            
+            statusDiv.className = `p-4 rounded-lg border ${bgColor} file-item`;
+            statusDiv.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            statusMessages.appendChild(statusDiv);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (statusDiv.parentElement) {
+                    statusDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Upload functionality
+        uploadBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading...';
+
+            for (const file of selectedFiles) {
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        showStatus(`✓ ${file.name} uploaded successfully`, 'success');
+                    } else {
+                        showStatus(`✗ ${file.name}: ${result.detail}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus(`✗ ${file.name}: Upload failed`, 'error');
+                }
+            }
+
+            // Reset after upload
+            selectedFiles = [];
+            updateFileList();
+            updateUploadButton();
+            uploadBtn.innerHTML = '<i class="fas fa-upload mr-2"></i>Upload Files';
+        });
+    </script>
+</body>
+</html> 
