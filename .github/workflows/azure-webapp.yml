@@ -28,12 +28,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Get Azure credentials from Key Vault
-        run: |
-          # Get the client secret from Key Vault
-          CLIENT_SECRET=$(az keyvault secret show --vault-name tinman-poc-kv-uksouth --name github-actions-client-secret --query value -o tsv)
-          echo "AZURE_CLIENT_SECRET=$CLIENT_SECRET" >> $GITHUB_ENV
+          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Archive app
         run: |
