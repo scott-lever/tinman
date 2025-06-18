@@ -1,0 +1,62 @@
+{
+  "version": 4,
+  "terraform_version": "1.12.2",
+  "serial": 21,
+  "lineage": "d1a19c38-48fd-06e7-0b2b-1998e4016e50",
+  "outputs": {
+    "key_vault_name": {
+      "value": "tinman-poc-kv-uksouth",
+      "type": "string"
+    },
+    "resource_group_name": {
+      "value": "tinman-poc-rg",
+      "type": "string"
+    }
+  },
+  "resources": [
+    {
+      "mode": "data",
+      "type": "azurerm_client_config",
+      "name": "current",
+      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "client_id": "04b07795-8ddb-461a-bbee-02f9e1bf7b46",
+            "id": "Y2xpZW50Q29uZmlncy9jbGllbnRJZD0wNGIwNzc5NS04ZGRiLTQ2MWEtYmJlZS0wMmY5ZTFiZjdiNDY7b2JqZWN0SWQ9ZDhlMDI1M2QtNTk4Ni00NGRlLTk3YTQtNWI3NzNmMTc1YzU2O3N1YnNjcmlwdGlvbklkPTBiMWQyN2RhLTc1YTQtNDBiNi04ZTM4LTlmYTE3ZDRmN2RlYTt0ZW5hbnRJZD04MGM4ZmMxOC0xOGViLTRjZjItODliOC1lODgzNTVlYTQxOWU=",
+            "object_id": "d8e0253d-5986-44de-97a4-5b773f175c56",
+            "subscription_id": "0b1d27da-75a4-40b6-8e38-9fa17d4f7dea",
+            "tenant_id": "80c8fc18-18eb-4cf2-89b8-e88355ea419e",
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "azurerm_resource_group",
+      "name": "main",
+      "provider": "provider[\"registry.terraform.io/hashicorp/azurerm\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "id": "/subscriptions/0b1d27da-75a4-40b6-8e38-9fa17d4f7dea/resourceGroups/tinman-poc-rg",
+            "location": "uksouth",
+            "managed_by": "",
+            "name": "tinman-poc-rg",
+            "tags": {},
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo1NDAwMDAwMDAwMDAwLCJkZWxldGUiOjU0MDAwMDAwMDAwMDAsInJlYWQiOjMwMDAwMDAwMDAwMCwidXBkYXRlIjo1NDAwMDAwMDAwMDAwfX0="
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}
