@@ -65,7 +65,7 @@ resource "azuread_application_federated_identity_credential" "github_actions" {
   description           = "GitHub Actions OIDC"
   audiences             = ["api://AzureADTokenExchange"]
   issuer                = "https://token.actions.githubusercontent.com"
-  subject               = "repo:scott-lever/tinman:environment:Production"
+  subject               = "repo:scott-lever/tinman:ref:refs/heads/main"
 }
 
 # Store GitHub Actions service principal credentials in Key Vault
