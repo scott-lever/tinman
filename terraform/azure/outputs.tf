@@ -52,3 +52,25 @@ output "storage_containers" {
     archives    = azurerm_storage_container.archives.name
   }
 }
+
+output "web_app_url" {
+  description = "Public URL of the Azure Web App"
+  value       = azurerm_linux_web_app.web.default_hostname
+}
+
+# GitHub Actions Service Principal outputs
+output "github_actions_client_id" {
+  description = "Client ID for GitHub Actions service principal"
+  value       = azuread_application.github_actions.application_id
+  sensitive   = true
+}
+
+output "github_actions_tenant_id" {
+  description = "Tenant ID for GitHub Actions service principal"
+  value       = data.azurerm_client_config.current.tenant_id
+}
+
+output "github_actions_subscription_id" {
+  description = "Subscription ID for GitHub Actions service principal"
+  value       = data.azurerm_client_config.current.subscription_id
+}
