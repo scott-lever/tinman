@@ -41,5 +41,4 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: tinman-webapp
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: app.zip 

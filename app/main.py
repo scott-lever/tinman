@@ -23,7 +23,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 # Azure configuration
-VAULT_URL = "https://tinman-poc-kv-uksouth.vault.azure.net/"
+VAULT_URL = "https://tinman-kv-20250619.vault.azure.net/"
 STORAGE_ACCOUNT_NAME = "tinmanpocstorage"
 CONTAINER_NAME = "raw-uploads"
 
