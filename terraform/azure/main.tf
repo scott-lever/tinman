@@ -270,10 +270,14 @@ resource "azurerm_linux_web_app" "web" {
     application_stack {
       python_version = "3.11"
     }
+    
+    app_command_line = "startup.sh"
   }
 
   app_settings = {
-    # Add environment variables here if needed
+    "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
+    "PYTHON_VERSION" = "3.11"
   }
 
   tags = {
