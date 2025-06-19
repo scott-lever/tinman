@@ -13,5 +13,5 @@ variable "location" {
 variable "key_vault_name" {
   description = "Name of the Key Vault"
   type        = string
-  default     = "tinman-poc-kv-uksouth"
+  default     = "tinman-kv-20250619"
 }

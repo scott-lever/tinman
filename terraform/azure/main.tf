@@ -101,7 +101,7 @@ resource "azurerm_cognitive_account" "openai" {
   kind                = "OpenAI"
   sku_name            = "S0"  # Standard tier
 
-  custom_subdomain_name = "tinman-openai"
+  custom_subdomain_name = "tinman-openai-20250619"
 
   network_acls {
     default_action = "Allow"
