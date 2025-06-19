@@ -266,18 +266,27 @@ resource "azurerm_linux_web_app" "web" {
   resource_group_name = azurerm_resource_group.main.name
   service_plan_id     = azurerm_app_service_plan.web.id
 
+  # Enable managed identity
+  identity {
+    type = "SystemAssigned"
+  }
+
   site_config {
     application_stack {
       python_version = "3.11"
     }
     
-    app_command_line = "startup.sh"
+    # Use proper startup command for FastAPI
+    app_command_line = "python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
   }
 
   app_settings = {
     "SCM_DO_BUILD_DURING_DEPLOYMENT" = "true"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
     "PYTHON_VERSION" = "3.11"
+    "AZURE_TENANT_ID" = data.azurerm_client_config.current.tenant_id
+    "AZURE_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
+    "AZURE_STORAGE_CONNECTION_STRING" = azurerm_storage_account.main.primary_connection_string
   }
 
   tags = {
@@ -285,3 +294,5 @@ resource "azurerm_linux_web_app" "web" {
     Project     = "Tinman"
   }
 }
+
+# Note: Key Vault access policy for web app will be added after the managed identity is created

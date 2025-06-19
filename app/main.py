@@ -30,7 +30,8 @@ CONTAINER_NAME = "raw-uploads"
 def get_azure_credentials():
     """Get Azure credentials and storage client"""
     try:
-        # Use DefaultAzureCredential for local development
+        # Use DefaultAzureCredential which will try multiple authentication methods
+        # In App Service, this will use the managed identity
         credential = DefaultAzureCredential()
         
         # Get storage connection string from Key Vault
@@ -42,6 +43,11 @@ def get_azure_credentials():
         return blob_service_client
     except Exception as e:
         logger.error(f"Error getting Azure credentials: {e}")
+        # For development/testing, you can use environment variables as fallback
+        connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+        if connection_string:
+            logger.info("Using fallback connection string from environment variable")
+            return BlobServiceClient.from_connection_string(connection_string)
         raise HTTPException(status_code=500, detail="Failed to connect to Azure services")
 
 @app.get("/", response_class=HTMLResponse)
